@@ -27,8 +27,8 @@ public:
     bool left_start_zone = false;
     bool reached_end_zone = false;
     bool const_velocity;
-    uint8_t l_cone_index = 1;
-    uint8_t r_cone_index = 1;
+    size_t l_cone_index = 1;
+    size_t r_cone_index = 1;
     uint8_t v_max;
     uint8_t v_const;
     uint8_t max_f_gain;
@@ -37,6 +37,7 @@ public:
 private:
     int findOppositeClosest(const Cone&, const std::vector<Cone*>&);
     void addFirstCentrePoints();
+	void addCentrePoints();
     void sortConesByDist(PathPoint&, PathPoint&);
     static bool compareConeDist(Cone* const&, Cone* const&);
     void resetTempConeVectors();

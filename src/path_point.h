@@ -8,7 +8,6 @@ struct PathPoint
     float y;		// Corresponding to y position on map
     float velocity;	// Corresponding to calculated reference velocity?
     float radius;	// Corresponding to radius of curvature
-
 };
 
 
