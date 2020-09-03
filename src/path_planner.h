@@ -42,7 +42,8 @@ private:
     void resetTempConeVectors();
     void popConesToAdd();
     void calcSpline();
-    void update(std::vector<Cone>&);
+	void addCones(const std::vector<Cone>&);
+	std::vector<float> update(const std::vector<Cone>&);
 	
 };
 

@@ -57,27 +57,62 @@ PathPlanner::PathPlanner(float car_x, float car_y, std::vector<Cone> cones, bool
     addFirstCentrePoints();
 }
 
+std::vector<float> PathPlanner::update(const std::vector<Cone> &new_cones)
+{
+	// Add new cones to local list of cones
+	if (~reached_end_zone)
+	{
+		addCones(new_cones);
+	}
+}
+
+void PathPlanner::addCones(const std::vector<Cone> &new_cones)
+{
+	if (raw_cones.size() < new_cones.size())
+	{
+		for (size_t i = raw_cones.size() - 1; i < new_cones.size(); ++i)
+		{
+			raw_cones.push_back(new_cones[i]);
+			if (new_cones[i].colour == 'b')
+			{
+				l_cones_to_add.push_back(&(*raw_cones.end()));
+				l_cones_sorted = false;
+			}
+			else if (new_cones[i].colour == 'y')
+			{
+				r_cones_to_add.push_back(&(*raw_cones.end()));
+				r_cones_sorted = false;
+			}
+			else if (new_cones[i].colour == 'r')
+			{
+				timing_cones.push_back(&(*raw_cones.end()));
+			}
+		}
+	}
+
+}
+
 void PathPlanner::addFirstCentrePoints()
 {
     size_t n = std::min(left_cones.size(), right_cones.size());		
-    size_t closest_opp_idx;
+    int closest_opp_idx;
     float centre_x, centre_y;
 
     for (int i = 0; i < n; i++)
     {
-	if (~left_cones[i]->mapped)
-	{
-	    closest_opp_idx = findOppositeClosest(*left_cones[i], right_cones);
-	    if (closest_opp_idx != -1)
-	    {
-		centre_x = (right_cones[closest_opp_idx]->position.x + left_cones[i]->position.x) / 2;
-		centre_y = (right_cones[closest_opp_idx]->position.y + left_cones[i]->position.y) / 2;
-		centre_points.push_back(PathPoint(centre_x, centre_y));
-		left_cones[i]->mapped = true;
-		right_cones[closest_opp_idx]->mapped = true;
-		l_cone_index++;
-	    }
-	}
+		if (~left_cones[i]->mapped)
+		{
+			closest_opp_idx = findOppositeClosest(*left_cones[i], right_cones);
+			if (closest_opp_idx != -1)
+			{
+			centre_x = (right_cones[closest_opp_idx]->position.x + left_cones[i]->position.x) / 2;
+			centre_y = (right_cones[closest_opp_idx]->position.y + left_cones[i]->position.y) / 2;
+			centre_points.push_back(PathPoint(centre_x, centre_y));
+			left_cones[i]->mapped = true;
+			right_cones[closest_opp_idx]->mapped = true;
+			l_cone_index++;
+			}
+		}
     }
 }
 
