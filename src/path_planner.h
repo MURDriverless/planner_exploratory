@@ -29,11 +29,13 @@ public:
     bool left_start_zone = false;
     bool reached_end_zone = false;
     bool const_velocity;
-    size_t l_cone_index = 0;
-    size_t r_cone_index = 0;
+    bool first_run = true;
+    int l_cone_index = -1;
+    int r_cone_index = -1;
     float v_max;
     float v_const;
     float f_gain;
+
 
     void resetTempConeVectors();
     std::vector<float> update(const std::vector<Cone>&, const float, const float);

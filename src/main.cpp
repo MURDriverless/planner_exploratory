@@ -37,7 +37,7 @@ int main()
 	// Cones test
     PathPlanner test_planner(test_car_x_1, test_car_y_1, test_cones, test_const_velocity, test_v_max, test_v_const, test_max_f_gain);
 
-//    test_planner.update(test_cones_update, test_car_x_2, test_car_y_2);
+    test_planner.update(test_cones_update, test_car_x_2, test_car_y_2);
 
     return 0;
 }

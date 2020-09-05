@@ -3,6 +3,7 @@
 
 struct PathPoint
 {
+    PathPoint();
     PathPoint(float, float); 
     float x;			// Corresponding to x position on map
     float y;			// Corresponding to y position on map
