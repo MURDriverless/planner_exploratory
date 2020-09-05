@@ -4,10 +4,10 @@
 struct PathPoint
 {
     PathPoint(float, float); 
-    float x;		// Corresponding to x position on map
-    float y;		// Corresponding to y position on map
-    float velocity;	// Corresponding to calculated reference velocity?
-    float radius;	// Corresponding to radius of curvature
+    float x;			// Corresponding to x position on map
+    float y;			// Corresponding to y position on map
+    float radius = -1;
+    float velocity = -1;
 };
 
 
