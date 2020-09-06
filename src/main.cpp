@@ -4,8 +4,8 @@
 #include <ostream>
 #include <vector>
 
-Cone c_1 = Cone(2.7609, 1.7154, 'b');
-Cone c_2 = Cone(3.1781, -1.9323, 'y');
+Cone c_1 = Cone(2.7609, 1.7154, 'r');
+Cone c_2 = Cone(3.1781, -1.9323, 'r');
 Cone c_3 = Cone(7.2786, 1.727, 'b');
 Cone c_4 = Cone(7.4856, -1.8135, 'y');
 Cone c_5 = Cone(12.035, 1.777, 'b');
@@ -22,14 +22,18 @@ Cone c_14 = Cone(29.048, -1.7289, 'y');
 std::vector<Cone> test_cones = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10};
 std::vector<Cone> test_cones_update = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12, c_13, c_14};
 
-bool test_const_velocity = true;
-float test_v_max = 1;
+bool test_const_velocity = false;
+float test_v_max = 5;
 float test_v_const = 2;
 float test_max_f_gain = 3;
-float test_car_x_1 = 3.0;
+float test_car_x_1 = 3.2;
 float test_car_x_2 = 5.0;
 float test_car_y_1 = 0.0;
-float test_car_y_2 = 0.0;
+float test_car_y_2 = -0.1;
+
+std::vector<float> X;
+std::vector<float> Y;
+std::vector<float> V;
 
 
 int main() 
@@ -37,9 +41,12 @@ int main()
 	// Cones test
     PathPlanner test_planner(test_car_x_1, test_car_y_1, test_cones, test_const_velocity, test_v_max, test_v_const, test_max_f_gain);
 
-    test_planner.update(test_cones_update, test_car_x_2, test_car_y_2);
+    test_planner.update(test_cones_update, test_car_x_2, test_car_y_2, X, Y, V);
+    test_planner.shutdown();
 
-    return 0;
+    for (auto &e: X){std::cout << e << std::endl << std::endl;}
+    for (auto &e: Y){std::cout << e << std::endl << std::endl;}
+    for (auto &e: V){std::cout << e << std::endl << std::endl;}
 }
 
 

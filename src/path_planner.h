@@ -36,9 +36,8 @@ public:
     float v_const;
     float f_gain;
 
-
-    void resetTempConeVectors();
-    std::vector<float> update(const std::vector<Cone>&, const float, const float);
+    void update(const std::vector<Cone>&, const float, const float, std::vector<float>&, std::vector<float>&, std::vector<float>&);
+    void shutdown();
 
 private:
     int findOppositeClosest(const Cone&, const std::vector<Cone*>&);
@@ -53,6 +52,8 @@ private:
     float calcRadius(const PathPoint&, const PathPoint&, const PathPoint&);
     float calcDist(const PathPoint&, const PathPoint&);
     void removeFirstPtr(std::vector<Cone*>&);
+    void resetTempConeVectors();
+    void returnResult(std::vector<float>&, std::vector<float>&, std::vector<float>&);
 };
 
 #endif // INCLUDE_PATH_PLANNER_H
