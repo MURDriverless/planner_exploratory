@@ -11,6 +11,10 @@ class PathPlanner
 {
 public:
     PathPlanner(float, float, const std::vector<Cone>&, bool, float, float, float);
+    void update(const std::vector<Cone>&, const float, const float, std::vector<float>&, std::vector<float>&, std::vector<float>&);
+    void shutdown();
+
+private:
     std::vector<Cone> raw_cones;
     std::vector<Cone*> left_cones;		// Cones on left-side of track
     std::vector<Cone*> right_cones;		// Cones on right-side of track
@@ -35,11 +39,6 @@ public:
     float v_max;
     float v_const;
     float f_gain;
-
-    void update(const std::vector<Cone>&, const float, const float, std::vector<float>&, std::vector<float>&, std::vector<float>&);
-    void shutdown();
-
-private:
     int findOppositeClosest(const Cone&, const std::vector<Cone*>&);
     void addFirstCentrePoints();
     void addCentrePoints();
@@ -56,4 +55,4 @@ private:
     void returnResult(std::vector<float>&, std::vector<float>&, std::vector<float>&);
 };
 
-#endif // INCLUDE_PATH_PLANNER_H
+#endif // SRC_PATH_PLANNER_H
