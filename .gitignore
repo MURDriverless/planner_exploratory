@@ -4,5 +4,6 @@ devel/
 logs/
 .catkin_tools/
 .idea/
+*.out
 
 
