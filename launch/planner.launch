@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="planner_exploratory" type="planner" name="planner_exploratory" output="screen"/>
+    <param name="constant_v" value="false"/>
+    <param name="v_max" value="5.0"/>
+    <param name="v_const" value="3.0"/>
+    <param name="max_f_gain" value="3.0"/>
+</launch>
+

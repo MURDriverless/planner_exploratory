@@ -6,15 +6,14 @@
 PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : nh(n), const_velocity(const_velocity), v_max(v_max), v_const(v_const), max_f_gain(max_f_gain)
 {
-    while (ros::ok())
-    {
-	launchSubscribers();
-	launchPublishers();
-    }
+    launchSubscribers();
+    launchPublishers();
     
     waitForMsgs();
 
     planner = std::unique_ptr<PathPlanner>(new PathPlanner(car_x, car_y, cones, const_velocity, v_max, v_const, max_f_gain));
+
+    ROS_INFO_STREAM("Planner: Planner initialized");
 
     now = ros::Time::now();
     pushPath();
@@ -45,6 +44,7 @@ int PlannerNode::launchSubscribers()
 	ROS_ERROR_STREAM(msg);
 	return 0;
     }
+    ROS_INFO_STREAM("Planner: Odometry and cone subscribers connected");
     return 1;
 }
 
@@ -60,6 +60,7 @@ int PlannerNode::launchPublishers()
 	ROS_ERROR_STREAM(msg);
 	return 0;
     }
+    ROS_INFO_STREAM("Planner: Path and visualizer publishers connected");
     return 1;
 }
 
@@ -121,7 +122,6 @@ void PlannerNode::pushPath()
 
     pub_path.publish(path_msg);
 }
-
 
 void PlannerNode::odomCallback(const nav_msgs::Odometry &msg)
 {
