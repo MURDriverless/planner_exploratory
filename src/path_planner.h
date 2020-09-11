@@ -27,6 +27,7 @@ private:
     std::vector<PathPoint> velocity_points;
     std::vector<float> radius_points;
     std::vector<PathPoint> centre_spline;
+    bool len_changed;
     bool l_cones_sorted = false;
     bool r_cones_sorted = false;
     bool set_final_points = false;

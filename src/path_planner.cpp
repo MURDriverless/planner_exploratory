@@ -63,7 +63,7 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, const float car_y,
 	std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
 {
-    // Add new cones to local list of cones
+	// Add new cones to local list of cones
     if (!reached_end_zone)
     {
 	    addCones(new_cones);
@@ -98,7 +98,7 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 	    }
 	}
 	else
-	    // TESTING
+	    // TESTED
 	{
 	    float m = delta_y / delta_x;
 	    float c = timing_cones[0]->position.y - m * timing_cones[0]->position.x;
@@ -147,7 +147,6 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 	    }
 	}
     }
-
     addVelocityPoints();
     returnResult(X, Y, V);
 }
@@ -357,7 +356,7 @@ void PathPlanner::popConesToAdd()
 
     while (!l_cones_to_add.empty())
     {
-	if (left_cones.empty()) // first iteration
+	if (left_cones.empty()) // upon init 
 	{
 	    dist = calcDist(l_cones_to_add[0]->position, l_cones_to_add[1]->position);
 	}
@@ -373,7 +372,7 @@ void PathPlanner::popConesToAdd()
     }
     while (!r_cones_to_add.empty())
     {
-	if (right_cones.empty()) // first iteration
+	if (right_cones.empty()) // upon init
 	{
 	    dist = calcDist(r_cones_to_add[0]->position, r_cones_to_add[1]->position);
 	}

@@ -6,7 +6,7 @@
 struct Cone 
 {
     Cone(float, float, char);
-	PathPoint position;
+    PathPoint position;
     char colour;			// Colour of Cone 
     float x_pos_avg;			// Average X position
     float y_pos_avg;			// Average Y position

@@ -20,7 +20,9 @@ Cone c_13 = Cone(29.008, 1.6882, 'b');
 Cone c_14 = Cone(29.048, -1.7289, 'y');
 
 std::vector<Cone> test_cones = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10};
-std::vector<Cone> test_cones_update = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12, c_13, c_14};
+std::vector<Cone> test_cones_update = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11};
+std::vector<Cone> test_cones_update_two = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12};
+std::vector<Cone> test_cones_update_three = {c_1, c_2, c_3, c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11, c_12, c_13, c_14};
 
 bool test_const_velocity = false;
 float test_v_max = 5;
@@ -35,6 +37,22 @@ std::vector<float> X;
 std::vector<float> Y;
 std::vector<float> V;
 
+void printResult()
+{
+    std::cout << "Result" << std::endl;
+    for (auto &e: X){std::cout << e << std::endl;} std::cout << std::endl;
+    for (auto &e: Y){std::cout << e << std::endl;} std::cout << std::endl;
+    for (auto &e: V){std::cout << e << std::endl;} std::cout << std::endl;
+    std::cout << std::endl;
+}
+
+void clearResult()
+{
+    X.clear();
+    Y.clear();
+    V.clear();
+}
+
 
 int main() 
 {
@@ -42,11 +60,19 @@ int main()
     PathPlanner test_planner(test_car_x_1, test_car_y_1, test_cones, test_const_velocity, test_v_max, test_v_const, test_max_f_gain);
 
     test_planner.update(test_cones_update, test_car_x_2, test_car_y_2, X, Y, V);
+    printResult();
+    clearResult();
+
+    test_planner.update(test_cones_update_two, test_car_x_2, test_car_y_2, X, Y, V);
+    printResult();
+    clearResult();
+
+    test_planner.update(test_cones_update_three, test_car_x_2, test_car_y_2, X, Y, V);
+    printResult();
+    clearResult();
+
     test_planner.shutdown();
 
-    for (auto &e: X){std::cout << e << std::endl << std::endl;}
-    for (auto &e: Y){std::cout << e << std::endl << std::endl;}
-    for (auto &e: V){std::cout << e << std::endl << std::endl;}
 }
 
 
