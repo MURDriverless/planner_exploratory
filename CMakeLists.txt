@@ -3,6 +3,10 @@ project(planner_exploratory)
 find_package(catkin REQUIRED COMPONENTS 
     roscpp
     std_msgs
+    message_filters
+    nav_msgs
+    geometry_msgs
+    mur_common
     )
 
 add_definitions(-std=c++14)
@@ -19,4 +23,6 @@ add_library(path_planner src/path_planner.cpp)
 add_library(node src/node.cpp)
 
 target_link_libraries(main ${catkin_LIBRARIES} node path_point cone path_planner)
+
+add_dependencies(main ${catkin_EXPORTED_TARGETS})
 
