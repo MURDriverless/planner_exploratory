@@ -2,6 +2,7 @@
 #include "node.h"
 #include <iostream>
 #include <vector>
+#include <assert.h>
 
 PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : nh(n), const_velocity(const_velocity), v_max(v_max), v_const(v_const), max_f_gain(max_f_gain)
@@ -11,13 +12,18 @@ PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, fl
     
     waitForMsgs();
 
-    planner = std::unique_ptr<PathPlanner>(new PathPlanner(car_x, car_y, cones, const_velocity, v_max, v_const, max_f_gain));
+    try
+    {
+	this->planner = std::unique_ptr<PathPlanner>(new PathPlanner(car_x, car_y, cones, const_velocity, v_max, v_const, max_f_gain));
+    }
+    catch (const char *msg)
+    {
+	ROS_ERROR_STREAM(msg);	
+    }
 
     ROS_INFO_STREAM("Planner: Planner initialized");
 
     now = ros::Time::now();
-    pushPath();
-    pushPathViz();
 
     cone_msg_received = false;
     odom_msg_received = false;
@@ -44,7 +50,7 @@ int PlannerNode::launchSubscribers()
 	ROS_ERROR_STREAM(msg);
 	return 0;
     }
-    ROS_INFO_STREAM("Planner: Odometry and cone subscribers connected");
+    ROS_INFO_STREAM("Planner: Odometry and cone subscribers connect");
     return 1;
 }
 
@@ -62,6 +68,14 @@ int PlannerNode::launchPublishers()
     }
     ROS_INFO_STREAM("Planner: Path and visualizer publishers connected");
     return 1;
+}
+
+void PlannerNode::printVectors()
+{
+    for (int i = 0; i < X.size(); i++)
+    {
+	std::cout << X[i] << ' ' << Y[i] << ' ' << V[i] << std::endl;
+    }
 }
 
 void PlannerNode::spinThread()
@@ -88,39 +102,40 @@ void PlannerNode::pushPathViz()
 {
     nav_msgs::Path path_viz_msg;
     path_viz_msg.header.stamp = now;
-    path_viz_msg.header.frame_id = "path_viz";
+    path_viz_msg.header.frame_id = "map";
 
-    std::vector<geometry_msgs::PoseStamped> pose_stamped;
-    pose_stamped.reserve(X.size());
+    std::vector<geometry_msgs::PoseStamped> poses;
+    poses.reserve(X.size());
 
-    for (int p = 0; p < pose_stamped.size(); p++)
+    for (int p = 0; p < X.size(); p++)
     {
-	pose_stamped[p].header.stamp = now;	
-	pose_stamped[p].header.frame_id = "path_viz";
-	pose_stamped[p].header.seq = p;
+	geometry_msgs::PoseStamped item; 
+	item.header.frame_id = "map";
+	item.header.seq = p;
+	item.header.stamp = now;
+	item.pose.position.x = X[p];
+	item.pose.position.y = Y[p];
+	item.pose.position.z = 0.0;
 
-	pose_stamped[p].pose.position.x = X[p];
-	pose_stamped[p].pose.position.y = Y[p];
-	pose_stamped[p].pose.position.z = 0.1;
-	// Quarternion left blank
+	poses.push_back(item);
     }
 
-    path_viz_msg.poses = pose_stamped;
+    path_viz_msg.poses = poses;
     pub_path_viz.publish(path_viz_msg);
 }
 
 void PlannerNode::pushPath()
 {
    // publish mur_common::cone_msg
-    mur_common::path_msg path_msg;
-    path_msg.header.frame_id = "path";
-    path_msg.header.stamp = now;
+    mur_common::path_msg msg;
+    msg.header.frame_id = "map";
+    msg.header.stamp = now;
 
-    path_msg.x = X;
-    path_msg.y = Y;
-    path_msg.v = V;
+    msg.x = X;
+    msg.y = Y;
+    msg.v = V;
 
-    pub_path.publish(path_msg);
+    pub_path.publish(msg);
 }
 
 void PlannerNode::odomCallback(const nav_msgs::Odometry &msg)

@@ -63,6 +63,7 @@ private:
     ros::Publisher pub_path_viz;
 
     ros::Time now;
+    void printVectors();
 };
 
 #endif // SRC_NODE_H

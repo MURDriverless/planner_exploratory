@@ -1,9 +1,11 @@
 #include "path_planner.h"
 #include "path_point.h"
+#include <ros/ros.h>
 #include <iostream>
 #include <algorithm>
 #include <math.h>
 #include <utility>
+#include <string>
 
 PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cones, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : const_velocity(const_velocity), v_max(v_max), v_const(v_const), f_gain(max_f_gain) 
@@ -191,6 +193,13 @@ void PathPlanner::addVelocityPoints()
 								   sqrt(centre_points[i].radius)) / 3, v_max); 
 		}
 
+	    }
+	}
+	else
+	{
+	    for (auto &point: centre_points)
+	    {
+		point.velocity = v_const;
 	    }
 	}
     }
