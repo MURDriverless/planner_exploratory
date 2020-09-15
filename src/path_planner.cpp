@@ -338,7 +338,7 @@ void PathPlanner::addFirstCentrePoints()
 
 int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> &cones)
 {
-	float min_dist = 4;
+	float min_dist = 7;
 	float dist;
 	int index = -1;
 	int i = 0;
