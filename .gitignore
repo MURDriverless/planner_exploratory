@@ -5,5 +5,5 @@ logs/
 .catkin_tools/
 .idea/
 *.out
-
+.vscode/
 
