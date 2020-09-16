@@ -311,6 +311,9 @@ void PathPlanner::truncateCentrePoints(const float &car_x, const float &car_y)
 		}
 	}
 
+	// Push iterator one forward
+	target_itr = target_itr - 1;
+
 	// Cut centre_points from here to car and put into this-> path
 	path.reserve(centre_points.size());
 	path.push_back(car);
