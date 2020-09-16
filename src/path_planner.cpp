@@ -155,7 +155,13 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 
 void PathPlanner::returnResult(std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
 {
-    for (auto &e: centre_points){X.push_back(e.x); Y.push_back(e.y); V.push_back(e.velocity);}
+	// TODO: undo constant velocity
+    for (auto &e: path)
+	{
+		X.push_back(e.x); 
+		Y.push_back(e.y); 
+		V.push_back(3.0);
+	}
 }
 
 void PathPlanner::addVelocityPoints()
@@ -284,6 +290,31 @@ void PathPlanner::addCentrePoints()
 			}
 		}
 	}
+}
+
+void PathPlanner::truncateCentrePoints(const float &car_x, const float &car_y)
+{
+	// Find centre_point index closest centrepoint to car
+	PathPoint car(car_x, car_y);
+	float dist;
+	float min_dist = 100000;
+	int index = centre_points.size() - 1;
+	std::vector<PathPoint>::reverse_iterator target_itr;
+
+	for (auto r_it = centre_points.rbegin(); r_it < centre_points.rend(); r_it++)
+	{
+		dist = calcDist(car, *r_it);
+		if (dist < min_dist)
+		{
+			target_itr = r_it;
+			min_dist = dist;
+		}
+	}
+
+	// Cut centre_points from here to car and put into this-> path
+	path.reserve(centre_points.size());
+	path.push_back(car);
+	path.insert(path.end(), target_itr.base(), centre_points.end());
 }
 
 void PathPlanner::addCones(const std::vector<Cone> &new_cones)

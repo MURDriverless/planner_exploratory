@@ -54,6 +54,7 @@ private:
     void removeFirstPtr(std::vector<Cone*>&);
     void resetTempConeVectors();
     void returnResult(std::vector<float>&, std::vector<float>&, std::vector<float>&);
+    void truncateCentrePoints(const float&, const float&);
 };
 
 #endif // SRC_PATH_PLANNER_H
