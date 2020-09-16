@@ -42,7 +42,7 @@ private:
     float f_gain;
     int findOppositeClosest(const Cone&, const std::vector<Cone*>&);
     void addFirstCentrePoints();
-    void addCentrePoints();
+    void addCentrePoints(const float&, const float&);
     void sortConesByDist(const PathPoint&, const PathPoint&);
     static bool compareConeDist(Cone* const&, Cone* const&);
     void popConesToAdd();
