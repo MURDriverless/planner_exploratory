@@ -42,7 +42,6 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
     PathPoint car_pos = PathPoint(car_x, car_y);
     centre_points.push_back(car_pos);
 
-
     // Sort by distance to car 
     sortConesByDist(car_pos, car_pos);
 	
@@ -74,29 +73,30 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 	    addCentrePoints();
     }
 
-    if (!set_final_points && timing_cones.size() == 2)
+    if (!set_final_points && timing_cones.size() > 2)
 	// UNTESTED
     {
-	float delta_x = timing_cones[0]->position.x - timing_cones[1]->position.x;
-	float delta_y = timing_cones[0]->position.y - timing_cones[1]->position.y;
-	bool comp_result;
+		float delta_x = timing_cones[0]->position.x - timing_cones[1]->position.x;
+		float delta_y = timing_cones[0]->position.y - timing_cones[1]->position.y;
+		bool comp_result;
 
 	if (delta_x == 0.0)
 	{
 	    comp_result = centre_points[0].x < timing_cones[0]->position.x;
 	    for (size_t i = final_points.size() - 1; i < centre_points.size(); i++)
 	    {
-		if ((final_points[i].x < timing_cones[0]->position.x) == comp_result)
-		{
-		    final_points.push_back(centre_points[i]);
-		}
-		else
-		{
-		    final_points.push_back(PathPoint(timing_cones[0]->position.x, 
-						    (timing_cones[0]->position.y + timing_cones[1]->position.y) / 2));
-		    final_points.push_back(centre_points[i]);
-		    set_final_points = true;
-		}
+			if ((final_points[i].x < timing_cones[0]->position.x) == comp_result)
+			{
+				final_points.push_back(centre_points[i]);
+			}
+			else
+			{
+				final_points.push_back(PathPoint(timing_cones[0]->position.x,
+												(timing_cones[0]->position.y + timing_cones[1]->position.y) / 2));
+
+				final_points.push_back(centre_points[i]);
+				set_final_points = true;
+			}
 	    }
 	}
 	else
@@ -108,20 +108,19 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 
 	    for (size_t i = final_points.size(); i < centre_points.size(); i++)
 	    {
-		if ((centre_points[i].y < m * centre_points[i].x + c) == comp_result)
-		{
-		    final_points.push_back(centre_points[i]);
-		}
-		else
-		{
-		    final_points.push_back(PathPoint((timing_cones[0]->position.x + timing_cones[1]->position.x) / 2,
-						     (timing_cones[0]->position.y + timing_cones[1]->position.y) / 2));
-		    final_points.push_back(centre_points[i]);
-		    set_final_points = true;
-		}
+			if ((centre_points[i].y < m * centre_points[i].x + c) == comp_result)
+			{
+				final_points.push_back(centre_points[i]);
+			}
+			else
+			{
+				final_points.push_back(PathPoint((timing_cones[0]->position.x + timing_cones[1]->position.x) / 2,
+								(timing_cones[0]->position.y + timing_cones[1]->position.y) / 2));
+				final_points.push_back(centre_points[i]);
+				set_final_points = true;
+			}
 	    }
 	}
-
 
 	if (!reached_end_zone)
 	{
@@ -257,7 +256,6 @@ float PathPlanner::calcRadius(const PathPoint &A, const PathPoint &B, const Path
     return (rad_A + rad_B + rad_C) / 3;
 }
 
-
 void PathPlanner::addCentrePoints()
 {
 	int opp_idx;
@@ -277,9 +275,15 @@ void PathPlanner::addCentrePoints()
 				midpoint_y = (right_cones[opp_idx]->position.y + left_cones[i]->position.y) / 2;	
 				left_cones[i]->mapped = true;
 				l_cone_index++;
-				if (centre_points.back().x != midpoint_x && centre_points.back().y != midpoint_y)
+
+				PathPoint midpoint(midpoint_x, midpoint_y);
+				float dist_cp = calcDist(midpoint, centre_points.back());
+
+				if (centre_points.back().x != midpoint_x && 
+					centre_points.back().y != midpoint_y && 
+					dist_cp < 6)
 				{
-					centre_points.push_back(PathPoint(midpoint_x, midpoint_y));
+					centre_points.push_back(midpoint);
 				}
 			}
 		}
@@ -338,7 +342,7 @@ void PathPlanner::addFirstCentrePoints()
 
 int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> &cones)
 {
-	float min_dist = 7;
+	float min_dist = 5.5;
 	float dist;
 	int index = -1;
 	int i = 0;
@@ -349,8 +353,8 @@ int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> 
 
 	    if (dist < min_dist)
 	    {
-		min_dist = dist;
-		index = i;
+			min_dist = dist;
+			index = i;
 	    }
 	    i++;
 	}
@@ -380,7 +384,7 @@ void PathPlanner::popConesToAdd()
 		removeFirstPtr(l_cones_to_add);
 	}
 	while (!r_cones_to_add.empty())
-		{
+	{
 		if (right_cones.empty()) // upon init
 		{
 			dist = calcDist(r_cones_to_add[0]->position, r_cones_to_add[1]->position);
@@ -401,10 +405,9 @@ void PathPlanner::removeFirstPtr(std::vector<Cone*>& cone_vec)
 {
     if (cone_vec.size() > 0 && cone_vec.front() != NULL)
     {
-	cone_vec.erase(cone_vec.begin());
+		cone_vec.erase(cone_vec.begin());
     }
 }
-
 
 void PathPlanner::sortConesByDist(const PathPoint &left, const PathPoint &right)
 {
