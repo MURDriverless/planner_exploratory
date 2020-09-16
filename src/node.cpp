@@ -159,7 +159,7 @@ void PlannerNode::coneCallback(const mur_common::cone_msg &msg)
 	}
 	else if (msg.colour[i] == "na")
 	{
-	    ROS_INFO_STREAM("'na' cone colour passed, skipping");
+	    std::cout << "'na' cone colour passed, skipping" << std::endl;
 	}
 	else if (msg.colour[i] == "BIG" || msg.colour[i] == "ORANGE")
 	{

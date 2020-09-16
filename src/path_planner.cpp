@@ -12,6 +12,9 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 {
     int num_l = 0;
     int num_r = 0;
+	raw_cones.reserve(1000);
+	l_cones_to_add.reserve(1000);
+	r_cones_to_add.reserve(1000);
 
     // Add to list of raw_cones so that references can be made to be amended
     // Need to change to take in points not cones, these cones will then be converted to cones 
@@ -293,30 +296,64 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 
 void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 {
-	size_t stored_cone_size = left_cones.size() + right_cones.size();
-	std::cout << stored_cone_size << ' ' << new_cones.size() << std::endl;
+	// MUST ADD TO RAW CONES EACH TIME
+	// for each cone in new cones
+	// check what colour each cone is
+	// if number of stored cones in that colour is less than number of new cones in that colour add that cone
+	int b_cone_count = 0;
+	int y_cone_count = 0;
+	int r_cone_count = 0;
 
-	if (stored_cone_size < new_cones.size())
+	for (auto &cone: new_cones)
 	{
-		for (size_t i = stored_cone_size; i < new_cones.size(); i++)
+		if (cone.colour == 'b')
 		{
-			raw_cones.push_back(new_cones[i]);
-			if (new_cones[i].colour == 'b')
+			b_cone_count++;
+		}
+		else if (cone.colour == 'y')
+		{
+			y_cone_count++;
+		}
+		else
+		{
+			r_cone_count++;
+		}
+	}
+	std::cout << "new left count: " << b_cone_count << " new right count: " << y_cone_count << std::endl;
+	int test_l = 0;
+	int test_r = 0;
+	for (auto &cone: new_cones)
+	{
+		if (cone.colour == 'b')
+		{
+			if (left_cones.size() + l_cones_to_add.size() < b_cone_count)
 			{
+				test_l++;
+				raw_cones.push_back(cone);
 				l_cones_to_add.push_back(&raw_cones.back());
 				l_cones_sorted = false;
 			}
-			else if (new_cones[i].colour == 'y')
+		}
+		else if (cone.colour == 'y')
+		{
+			if (right_cones.size() + r_cones_to_add.size() < y_cone_count)
 			{
+				test_r++;
+				raw_cones.push_back(cone);
 				r_cones_to_add.push_back(&raw_cones.back());
 				r_cones_sorted = false;
 			}
-			else if (new_cones[i].colour == 'r')
+		}
+		else if (cone.colour == 'r')
+		{
+			if (timing_cones.size() < r_cone_count)
 			{
+				raw_cones.push_back(cone);
 				timing_cones.push_back(&raw_cones.back());
 			}
 		}
 	}
+	std::cout << "adding left: " << test_l << " adding right: " << test_r << std::endl;
 }
 
 void PathPlanner::addFirstCentrePoints()
@@ -373,6 +410,7 @@ void PathPlanner::popConesToAdd()
 
     while (!l_cones_to_add.empty())
     {
+		std::cout << "l to add: " << l_cones_to_add.size() + left_cones.size() << std::endl;
 		if (left_cones.empty()) // upon init 
 		{
 			dist = calcDist(l_cones_to_add[0]->position, l_cones_to_add[1]->position);
@@ -388,7 +426,8 @@ void PathPlanner::popConesToAdd()
 		removeFirstPtr(l_cones_to_add);
 	}
 	while (!r_cones_to_add.empty())
-	{
+	{ 
+		std::cout<< " r to add " << r_cones_to_add.size() + right_cones.size() << std::endl;
 		if (right_cones.empty()) // upon init
 		{
 			dist = calcDist(r_cones_to_add[0]->position, r_cones_to_add[1]->position);
@@ -402,8 +441,9 @@ void PathPlanner::popConesToAdd()
 			right_cones.push_back(r_cones_to_add.front());
 		}
 		removeFirstPtr(r_cones_to_add);
-		std::cout << dist << std::endl;
     }
+	std::cout << "left cone actual: " << left_cones.size() << " right cone actual: " << right_cones.size() << std::endl;
+	std::cout << std::endl;
 }
 
 void PathPlanner::removeFirstPtr(std::vector<Cone*>& cone_vec)
