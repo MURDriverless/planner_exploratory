@@ -150,6 +150,7 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 	}
     }
     addVelocityPoints();
+	truncateCentrePoints(car_x, car_y);
     returnResult(X, Y, V);
 }
 
@@ -311,7 +312,7 @@ void PathPlanner::truncateCentrePoints(const float &car_x, const float &car_y)
 		}
 	}
 
-	// Push iterator one forward
+	// Push iterator one backward
 	target_itr = target_itr - 1;
 
 	// Cut centre_points from here to car and put into this-> path
