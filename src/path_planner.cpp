@@ -280,14 +280,9 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 				PathPoint midpoint(midpoint_x, midpoint_y);
 				float dist_cp = calcDist(midpoint, centre_points.back());
 
-				// Check distance to car
-				PathPoint car_pos(car_x, car_y);
-				float dist_car = calcDist(car_pos, midpoint);
-
 				if (centre_points.back().x != midpoint_x && 
 					centre_points.back().y != midpoint_y && 
-					dist_cp < 10 &&
-					dist_car > 1)
+					dist_cp < 10)
 				{
 					centre_points.push_back(midpoint);
 				}
@@ -299,11 +294,11 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 {
 	size_t stored_cone_size = left_cones.size() + right_cones.size();
-	std::cout << raw_cones.size() << std::endl;
+	std::cout << stored_cone_size << ' ' << new_cones.size() << std::endl;
 
 	if (stored_cone_size < new_cones.size())
 	{
-		for (size_t i = 0; i < new_cones.size(); i++)
+		for (size_t i = stored_cone_size; i < new_cones.size(); i++)
 		{
 			raw_cones.push_back(new_cones[i]);
 			if (new_cones[i].colour == 'b')
@@ -391,7 +386,6 @@ void PathPlanner::popConesToAdd()
 			left_cones.push_back(l_cones_to_add.front());
 		}
 		removeFirstPtr(l_cones_to_add);
-		std::cout << dist << std::endl;
 	}
 	while (!r_cones_to_add.empty())
 	{
@@ -403,11 +397,12 @@ void PathPlanner::popConesToAdd()
 		{
 			dist = calcDist(right_cones.back()->position, r_cones_to_add.front()->position);
 		}
-		if (dist < 12)
+		if (dist < 10)
 		{
 			right_cones.push_back(r_cones_to_add.front());
 		}
 		removeFirstPtr(r_cones_to_add);
+		std::cout << dist << std::endl;
     }
 }
 
