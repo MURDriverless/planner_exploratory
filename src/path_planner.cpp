@@ -298,6 +298,20 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 			}
 		}
 	}
+
+	PathPoint midpoint_check(
+		(left_cones.back()->position.x + right_cones.back()->position.x) / 2, 
+		(left_cones.back()->position.y + right_cones.back()->position.y) / 2
+		);
+
+	if (!(centre_points.back().x == midpoint_check.x) && !(centre_points.back().y == midpoint_check.y))
+	{
+		float dist_check = calcDist(centre_points.back(), midpoint_check);
+		if (dist_check > 1.5)
+		{
+			centre_points.push_back(midpoint_check);
+		}
+	}
 }
 
 void PathPlanner::addCones(const std::vector<Cone> &new_cones)
