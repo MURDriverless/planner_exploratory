@@ -289,10 +289,11 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 
 				float car_dist_l = calcDist(PathPoint(car_x, car_y), midpoint_l);
 
-				if (car_dist_l < 14)
+				if (car_dist_l < 10)
 				{
 					left_cones[i]->mapped=true;
 					centre_points.push_back(midpoint_l);
+					std::cout << "Centre Point identified at: " << midpoint_l.x << ' ' << midpoint_l.y << std::endl;
 				}
 			}
 		}
@@ -331,7 +332,7 @@ void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 	int test_l = 0;
 	int test_r = 0;
 
-	for (int i = left_cones.size() - 1; i < b_temp.size(); i++)
+	for (int i = left_cones.size(); i < b_temp.size(); i++)
 	{
 		if (left_cones.size() + l_cones_to_add.size() < b_temp.size())
 		{
@@ -342,7 +343,7 @@ void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 		}
 	}
 
-	for (int i = right_cones.size() - 1; i < y_temp.size(); i++)
+	for (int i = right_cones.size(); i < y_temp.size(); i++)
 	{
 		if (right_cones.size() + r_cones_to_add.size() < y_temp.size())
 		{
