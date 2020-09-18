@@ -9,6 +9,7 @@ struct PathPoint
     float y;			// Corresponding to y position on map
     float radius = 0;
     float velocity = 0; 
+    float angle = 0;
 };
 
 

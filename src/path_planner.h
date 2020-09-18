@@ -7,6 +7,8 @@
 #include "cone.h"
 #include "path_point.h"
 
+#define PI 3.14159265359
+
 class PathPlanner 
 {
 public:
@@ -53,7 +55,8 @@ private:
     void resetTempConeVectors();
     void returnResult(std::vector<float>&, std::vector<float>&, std::vector<float>&);
     PathPoint centralizeTimingCones();
-    float calcAngle(const PathPoint&, const PathPoint&, const PathPoint&);
+    static float calcAngle(const PathPoint&, const PathPoint&, const PathPoint&);
+    static float calcRelativeAngle(const PathPoint&, const PathPoint&);
 };
 
 #endif // SRC_PATH_PLANNER_H

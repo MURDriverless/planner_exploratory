@@ -134,6 +134,7 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
     addVelocityPoints();
     returnResult(X, Y, V);
 	std::cout << "num cps: " << centre_points.size() << std::endl;
+	std::cout << std::endl;
 }
 
 void PathPlanner::returnResult(std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
@@ -211,10 +212,17 @@ void PathPlanner::shutdown()
 
 float PathPlanner::calcAngle(const PathPoint &A, const PathPoint &B, const PathPoint &C)
 {
-	float result = atan2(C.y - A.y, C.x - A.x) -
-				   atan2(B.y - A.y, B.x - A.x);
+	float angle = atan2(C.y - A.y, C.x - A.x) -
+				  atan2(B.y - A.y, B.x - A.x);
 
-	return result;
+	return angle * 180 / PI;
+}
+
+float PathPlanner::calcRelativeAngle(const PathPoint &p1, const PathPoint &p2)
+{
+	const float angle = atan2(p2.y - p1.y, p2.x - p1.x);
+
+	return angle;
 }
 
 float PathPlanner::calcRadius(const PathPoint &A, const PathPoint &B, const PathPoint &C)
@@ -272,14 +280,24 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 					(left_cones[i]->position.y + right_cones[opp_idx]->position.y) / 2
 				);
 
-				float car_dist_l = calcDist(PathPoint(car_x, car_y), midpoint_l);
+				float dist_back = calcDist(centre_points.back(), midpoint_l);
+				float dist_car = calcDist(PathPoint(car_x, car_y), midpoint_l);
+
 				if (centre_points.size() > 2)
 				{
-					float cp_angle = calcAngle(*(centre_points.end() - 2), *(centre_points.end() - 1), midpoint_l);
-					if (!(abs(cp_angle) > 0.4) && car_dist_l < 12)
+					float cp_angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), midpoint_l);
+
+					if (cp_angle < 60 && cp_angle > -60 && dist_back > 1 && dist_back < 7 && dist_car < 7)
 					{
 						centre_points.push_back(midpoint_l);
 						left_cones[i]->mapped = true;
+						std::cout << "accepted relative angle: " << cp_angle << std::endl;
+						std::cout << "accepted dist: " << dist_back << std::endl;
+					}
+					else 
+					{
+						std::cout << "rejected dist: " << dist_back << std::endl;
+						std::cout << "rejected relative angle: " << cp_angle << std::endl;
 					}
 				}
 			}
@@ -291,16 +309,26 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 		(left_cones.back()->position.y + right_cones.back()->position.y) / 2
 		);
 
-	if (!(centre_points.back().x == midpoint_check.x) && !(centre_points.back().y == midpoint_check.y))
+	float dist_back = calcDist(centre_points.back(), midpoint_check);
+
+	if (abs(dist_back > 0.2))
 	{
 		float dist_check = calcDist(centre_points.back(), midpoint_check);
 		if (centre_points.size() > 2)
 		{
-			float cp_angle = calcAngle(*(centre_points.end() - 2), *(centre_points.end() - 1), midpoint_check);
+			float cp_angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), midpoint_check);
+			float dist_car = calcDist(PathPoint(car_x, car_y), midpoint_check);
 
-			if (dist_check > 1.5 && abs(cp_angle) < 0.45)
+			if (dist_back > 1 && dist_back < 7 && cp_angle > -60 && cp_angle < 60 && dist_car < 7)
 			{
 				centre_points.push_back(midpoint_check); 
+				std::cout << "accepted relative angle: " << cp_angle << std::endl;
+				std::cout << "accepted dist: " << dist_check << std::endl;
+			}
+			else
+			{
+				std::cout << "rejected dist: " << dist_check << std::endl;
+				std::cout << "rejected relative angle: " << cp_angle << std::endl;
 			}
 		}
 	}
@@ -364,28 +392,6 @@ void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 			timing_cones.push_back(&raw_cones.back());
 		}
 	}
-
-	for (auto &lc: left_cones)
-	{
-		std::cout << "left cones " << lc->position.x << ' ' << lc->position.y << std::endl;		
-	}
-
-	for (auto &rc: right_cones)
-	{
-		std::cout << "right cones " << rc->position.x << ' ' << rc->position.y << std::endl;		
-	}
-
-	for (auto &lcta: l_cones_to_add)
-	{
-		std::cout << "l cones to add " << lcta->position.x << ' ' << lcta->position.y << std::endl;		
-	}
-	
-	for (auto &lcta: r_cones_to_add)
-	{
-		std::cout << "r cones to add " << lcta->position.x << ' ' << lcta->position.y << std::endl;		
-	}
-
-	std::cout << std::endl;
 }
 
 void PathPlanner::addFirstCentrePoints()
@@ -463,7 +469,6 @@ void PathPlanner::popConesToAdd()
 
     // NEEDS TO BE DISTANCE TO THE LAST CONE ON UPDATE, NOT DISTANCE TO THE FIRST IN LCONESTOADD
 
-	std::cout << "num l to add: " << l_cones_to_add.size() << std::endl;
     while (!l_cones_to_add.empty())
     {
 		if (left_cones.empty()) // upon init 
@@ -479,10 +484,8 @@ void PathPlanner::popConesToAdd()
 			left_cones.push_back(l_cones_to_add.front());
 		}
 		removeFirstPtr(l_cones_to_add);
-		std::cout << "l to add remaining: " << l_cones_to_add.size() << std::endl;
 	}
 
-	std::cout << "num r to add: " << r_cones_to_add.size() << std::endl;
 	while (!r_cones_to_add.empty())
 	{ 
 		if (right_cones.empty()) // upon init
@@ -498,7 +501,6 @@ void PathPlanner::popConesToAdd()
 			right_cones.push_back(r_cones_to_add.front());
 		}
 		removeFirstPtr(r_cones_to_add);
-		std::cout << "r to add remaining: " << r_cones_to_add.size() << std::endl;
     }
 }
 
