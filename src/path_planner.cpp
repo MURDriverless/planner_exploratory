@@ -18,35 +18,15 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 
     // Add to list of raw_cones so that references can be made to be amended
     // Need to change to take in points not cones, these cones will then be converted to cones 
-    for (auto& cone: cones) {raw_cones.push_back(cone);}
-
-    // Prepare initial cones to be added to the path planner 
-    for (auto& cone: raw_cones) 
-    {
-	if (cone.colour == 'b')
-	{
-	    num_l++;
-	    l_cones_to_add.push_back(&cone);
-	    l_cones_sorted = false;
-	}
-	else if (cone.colour == 'y')
-	{
-	    num_r++;
-	    r_cones_to_add.push_back(&cone);
-	    r_cones_sorted = false;
-	}
-	else if (cone.colour == 'r')
-	{
-	   timing_cones.push_back(&cone); 
-	}
-    }
+	addCones(cones);
     
-    // Add the car position to the centre points (THIS HAS BEEN TRUNCATED - confirm with Alex)
+    // Add the car position to the centre points 
     PathPoint car_pos = PathPoint(car_x, car_y);
     centre_points.push_back(car_pos);
+	centre_points.push_back(centralizeTimingCones());
 
     // Sort by distance to car 
-    sortConesByDist(car_pos, car_pos);
+    sortConesByDist(centre_points.back(), centre_points.back());
 	
     // Add CLOSEST cones to vector of known cones
     left_cones.push_back(l_cones_to_add.front());
@@ -229,6 +209,14 @@ void PathPlanner::shutdown()
     r_cones_to_add.clear();
 }
 
+float PathPlanner::calcAngle(const PathPoint &A, const PathPoint &B, const PathPoint &C)
+{
+	float result = atan2(C.y - A.y, C.x - A.x) -
+				   atan2(B.y - A.y, B.x - A.x);
+
+	return result;
+}
+
 float PathPlanner::calcRadius(const PathPoint &A, const PathPoint &B, const PathPoint &C)
 {
     std::pair<float, float> AB_mid {(A.x + B.x) / 2, (A.y + B.y) / 2};
@@ -272,9 +260,6 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 	float midpoint_y;
 	PathPoint midpoint_l;
 
-	// Check whether cones are mapped already
-	// l_cone_index, or left_cones.size() could be wrong
-
 	for (int i = 0; i < left_cones.size(); i++)
 	{
 		if (!left_cones[i]->mapped)
@@ -288,12 +273,14 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 				);
 
 				float car_dist_l = calcDist(PathPoint(car_x, car_y), midpoint_l);
-
-				if (car_dist_l < 10)
+				if (centre_points.size() > 2)
 				{
-					left_cones[i]->mapped=true;
-					centre_points.push_back(midpoint_l);
-					std::cout << "Centre Point identified at: " << midpoint_l.x << ' ' << midpoint_l.y << std::endl;
+					float cp_angle = calcAngle(*(centre_points.end() - 2), *(centre_points.end() - 1), midpoint_l);
+					if (!(abs(cp_angle) > 0.4) && car_dist_l < 12)
+					{
+						centre_points.push_back(midpoint_l);
+						left_cones[i]->mapped = true;
+					}
 				}
 			}
 		}
@@ -307,19 +294,20 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 	if (!(centre_points.back().x == midpoint_check.x) && !(centre_points.back().y == midpoint_check.y))
 	{
 		float dist_check = calcDist(centre_points.back(), midpoint_check);
-		if (dist_check > 1.5)
+		if (centre_points.size() > 2)
 		{
-			centre_points.push_back(midpoint_check);
+			float cp_angle = calcAngle(*(centre_points.end() - 2), *(centre_points.end() - 1), midpoint_check);
+
+			if (dist_check > 1.5 && abs(cp_angle) < 0.45)
+			{
+				centre_points.push_back(midpoint_check); 
+			}
 		}
 	}
 }
 
 void PathPlanner::addCones(const std::vector<Cone> &new_cones)
 {
-	// MUST ADD TO RAW CONES EACH TIME
-	// for each cone in new cones
-	// check what colour each cone is
-	// if number of stored cones in that colour is less than number of new cones in that colour add that cone
 	std::vector<Cone> b_temp;
 	std::vector<Cone> y_temp;
 	std::vector<Cone> r_temp;
@@ -419,14 +407,38 @@ void PathPlanner::addFirstCentrePoints()
 			    left_cones[i]->mapped = true;
 			    right_cones[closest_opp_idx]->mapped = true;
 		    }
-			std::cout << centre_points.size() << std::endl;
 	    }
     }
 }
 
+PathPoint PathPlanner::centralizeTimingCones()
+{
+	// Get average x and y position of all timing cones
+	PathPoint avg_point(0, 0);
+	float pcp_dist;
+
+	for (int i = 0; i < timing_cones.size(); i++)
+	{
+		avg_point.x += timing_cones[i]->position.x; // summation of x positions
+		avg_point.y += timing_cones[i]->position.y; // summation of y positions
+	} 
+
+	avg_point.x = avg_point.x / timing_cones.size(); // avg x dist
+	avg_point.y = avg_point.y / timing_cones.size(); // avg y dist
+
+	// Calc distance to previous centrepoint
+	pcp_dist = calcDist(centre_points.front(), avg_point);
+
+	if (pcp_dist < 4)
+	{
+		std::cout << "Average timing cone position calculated" << std::endl;
+		return avg_point;
+	}
+}
+
 int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> &cones)
 {
-	float min_dist = 7;
+	float min_dist = 12;
 	float dist;
 	int index = -1;
 	int i = 0;

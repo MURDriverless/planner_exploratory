@@ -35,8 +35,6 @@ private:
     bool reached_end_zone = false;
     bool const_velocity;
     bool first_run = true;
-    int l_cone_index = -1;
-    int r_cone_index = -1;
     float v_max;
     float v_const;
     float f_gain;
@@ -54,6 +52,8 @@ private:
     void removeFirstPtr(std::vector<Cone*>&);
     void resetTempConeVectors();
     void returnResult(std::vector<float>&, std::vector<float>&, std::vector<float>&);
+    PathPoint centralizeTimingCones();
+    float calcAngle(const PathPoint&, const PathPoint&, const PathPoint&);
 };
 
 #endif // SRC_PATH_PLANNER_H
