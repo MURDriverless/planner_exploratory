@@ -212,10 +212,14 @@ void PathPlanner::shutdown()
 
 float PathPlanner::calcAngle(const PathPoint &A, const PathPoint &B, const PathPoint &C)
 {
-	float angle = atan2(C.y - A.y, C.x - A.x) -
-				  atan2(B.y - A.y, B.x - A.x);
+	float cb_x = B.x - C.x;
+	float cb_y = B.y - C.y;
+	float ca_x = B.x - A.x;
+	float ca_y = B.y - A.y;
 
-	return angle * 180 / PI;
+	float angle = (atan2(cb_x, cb_y) - atan2(ca_x, ca_y)) * 180 / PI;
+
+	return angle;
 }
 
 float PathPlanner::calcRelativeAngle(const PathPoint &p1, const PathPoint &p2)
@@ -287,7 +291,7 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 				{
 					float cp_angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), midpoint_l);
 
-					if (cp_angle < 60 && cp_angle > -60 && dist_back > 1 && dist_back < 7 && dist_car < 7)
+					if (abs(cp_angle) < 250 && abs(cp_angle) > 110 && dist_back > 1 && dist_back < 8 && dist_car < 8)
 					{
 						centre_points.push_back(midpoint_l);
 						left_cones[i]->mapped = true;
@@ -319,7 +323,7 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 			float cp_angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), midpoint_check);
 			float dist_car = calcDist(PathPoint(car_x, car_y), midpoint_check);
 
-			if (dist_back > 1 && dist_back < 7 && cp_angle > -60 && cp_angle < 60 && dist_car < 7)
+			if (abs(cp_angle) < 250 && abs(cp_angle) > 110 && dist_back > 1 && dist_back < 8 && dist_car < 8)
 			{
 				centre_points.push_back(midpoint_check); 
 				std::cout << "accepted relative angle: " << cp_angle << std::endl;
