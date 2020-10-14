@@ -31,7 +31,7 @@ PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, fl
 
 void PlannerNode::waitForMsgs()
 {
-    while (!cone_msg_received || !odom_msg_received) 
+    while (!cone_msg_received || !odom_msg_received && ros::ok()) 
     {
 	ros::spinOnce();
 	ros::Duration(0.005).sleep();

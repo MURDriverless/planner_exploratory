@@ -8,11 +8,8 @@
 #include <string>
 
 PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cones, bool const_velocity, float v_max, float v_const, float max_f_gain)
-    : const_velocity(const_velocity), v_max(v_max), v_const(v_const), f_gain(max_f_gain) 
+    : const_velocity(const_velocity), v_max(v_max), v_const(v_const), f_gain(max_f_gain)
 {
-    int num_l = 0;
-    int num_r = 0;
-
 	raw_cones.reserve(1000);
 	l_cones_to_add.reserve(1000);
 	r_cones_to_add.reserve(1000);
@@ -22,7 +19,7 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 	addCones(cones);
     
     // Add the car position to the centre points 
-    PathPoint car_pos = PathPoint(car_x, car_y);
+    PathPoint car_pos(car_x, car_y);
     centre_points.push_back(car_pos);
 	centre_points.push_back(centralizeTimingCones());
 
@@ -48,38 +45,53 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, const float car_y,
 						 std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
 {
-	if (left_start_zone)
+	if (complete)
+		returnResult(X, Y, V);
+	else
 	{
-		// join track if feasible
-		if (joinFeasible(car_x, car_y))
+
+		if (left_start_zone)
 		{
-			centre_points.push_back(centre_points.front());
-			reached_end_zone = true;
+			// join track if feasible
+			if (joinFeasible(car_x, car_y))
+			{
+				centre_points.push_back(centre_points.front());
+				reached_end_zone = true;
+				complete = true;
+			}
 		}
+		else
+		{
+			if (calcDist(centre_points.front(), PathPoint(car_x, car_y)) > 5)
+				left_start_zone = true;
+		}
+		
+
+		if (!reached_end_zone)
+		{
+			addCones(new_cones);
+			sortConesByDist(left_cones.back()->position, right_cones.back()->position);
+			popConesToAdd();
+			addCentrePoints(car_x, car_y);
+			addVelocityPoints();
+		}
+
+		returnResult(X, Y, V);
 	}
-
-    if (!reached_end_zone)
-    {
-	    addCones(new_cones);
-	    sortConesByDist(left_cones.back()->position, right_cones.back()->position);
-	    popConesToAdd();
-	    addCentrePoints(car_x, car_y);
-		addVelocityPoints();
-    }
-
-	returnResult(X, Y, V);
-
-	std::cout << "num cps: " << centre_points.size() << std::endl;
-	std::cout << std::endl;
 }
 
 bool PathPlanner::joinFeasible(const float &car_x, const float &car_y)
 {
-	/*
-	Two conditions:
-		- centre point feasible
-		- car within set distance
-	*/
+	if (calcDist(centre_points.back(), centre_points.front()) < 2)
+	{
+		float angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), centre_points.front());
+		std::cout << angle << std::endl;
+
+		if (angle > MIN_ANGLE && angle < MAX_ANGLE)
+			return true;
+	}
+	else
+		return false;
 }
 
 void PathPlanner::returnResult(std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
@@ -220,7 +232,7 @@ PathPoint PathPlanner::generateCentrePoint(const Cone* cone_one, const Cone* con
 	float dist_back = calcDist(centre_points.back(), midpoint);
 	float angle = abs(calcAngle(*(centre_points.end() - 2), centre_points.back(), midpoint));
 
-	if (angle > 95 && angle < 265 && dist_back > 0.5 && dist_back < 12)
+	if (angle > MIN_ANGLE && angle < MAX_ANGLE && dist_back > 0.5 && dist_back < CP_DIST)
 	{
 		std::cout << "Accepted point: " << dist_back << ' ' << angle << std::endl;
 		feasible = true;

@@ -9,6 +9,10 @@
 
 #define PI 3.14159265359
 
+extern const uint16_t MIN_ANGLE = 95;
+extern const uint16_t MAX_ANGLE = 275;
+extern const uint8_t CP_DIST = 12;
+
 class PathPlanner 
 {
 public:
@@ -34,6 +38,7 @@ private:
     bool set_final_points = false;
     bool left_start_zone = false;
     bool reached_end_zone = false;
+    bool complete = false;
     bool const_velocity;
     bool first_run = true;
     float v_max;
