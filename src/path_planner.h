@@ -21,8 +21,7 @@ private:
     std::vector<Cone*> left_cones;		// Cones on left-side of track
     std::vector<Cone*> right_cones;		// Cones on right-side of track
     std::vector<PathPoint> centre_points;
-    std::vector<Cone*> timing_cones;		// Cones for timing? TO ASK
-    std::vector<PathPoint> path;		// PathCoordinates corresponding to planned path
+    std::vector<Cone*> timing_cones;		
     std::vector<Cone*> l_cones_to_add; 
     std::vector<Cone*> r_cones_to_add; 
     std::vector<PathPoint> final_points;
@@ -57,6 +56,8 @@ private:
     PathPoint centralizeTimingCones();
     static float calcAngle(const PathPoint&, const PathPoint&, const PathPoint&);
     static float calcRelativeAngle(const PathPoint&, const PathPoint&);
+    bool joinFeasible(const float&, const float&);
+    PathPoint generateCentrePoint(const Cone*, const Cone*, bool&);
 };
 
 #endif // SRC_PATH_PLANNER_H
