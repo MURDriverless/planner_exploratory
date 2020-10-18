@@ -3,10 +3,13 @@
 #include <iostream>
 #include <vector>
 #include <assert.h>
+#include <limits>
 
 PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : nh(n), const_velocity(const_velocity), v_max(v_max), v_const(v_const), max_f_gain(max_f_gain)
 {
+    times.reserve(std::numeric_limits<uint16_t>::max());
+    rtimes.reserve(std::numeric_limits<uint16_t>::max());
     launchSubscribers();
     launchPublishers();
     
@@ -58,15 +61,17 @@ int PlannerNode::launchPublishers()
 {
     try
     {
-	pub_path = nh.advertise<mur_common::path_msg>(PATH_TOPIC, 1);
-	pub_path_viz = nh.advertise<nav_msgs::Path>(PATH_VIZ_TOPIC, 1);
+        pub_path = nh.advertise<mur_common::path_msg>(PATH_TOPIC, 1);
+        pub_path_viz = nh.advertise<nav_msgs::Path>(PATH_VIZ_TOPIC, 1);
+        pub_health = nh.advertise<mur_common::diagnostic_msg>(HEALTH_TOPIC, 1);
     }
     catch (const char *msg)
     {
-	ROS_ERROR_STREAM(msg);
-	return 0;
+        ROS_ERROR_STREAM(msg);
+        return 0;
     }
-    ROS_INFO_STREAM("Planner: Path and visualizer publishers connected");
+
+    ROS_INFO_STREAM("Planner: Path, visualisation, diagnostic publishers connected");
     return 1;
 }
 
@@ -80,14 +85,28 @@ void PlannerNode::printVectors()
 
 void PlannerNode::spinThread()
 {
+    auto rstart = Clock::now();
     clearTempVectors();
     waitForMsgs();
+    auto start = Clock::now();
     planner->update(cones, car_x, car_y, X, Y, V);
-    now = ros::Time::now();
+    auto end = Clock::now();
     pushPath();
     pushPathViz();
     cone_msg_received = false;
     odom_msg_received = false;
+    auto rend = Clock::now();
+    pushHealth(start, end, rstart, rend);
+}
+
+void PlannerNode::pushHealth(ClockTP& s, ClockTP& e, ClockTP& rs, ClockTP& re)
+{
+    mur_common::diagnostic_msg h;
+    times.emplace_back(std::chrono::duration_cast<std::chrono::microseconds>(e - s).count());
+    rtimes.emplace_back(std::chrono::duration_cast<std::chrono::microseconds>(re - rs).count());
+    h.compute_times = times;
+    h.ros_compute_times = rtimes;
+    pub_health.publish(h);
 }
 
 void PlannerNode::clearTempVectors()
@@ -101,7 +120,6 @@ void PlannerNode::clearTempVectors()
 void PlannerNode::pushPathViz()
 {
     nav_msgs::Path path_viz_msg;
-    path_viz_msg.header.stamp = now;
     path_viz_msg.header.frame_id = "map";
 
     std::vector<geometry_msgs::PoseStamped> poses;
@@ -109,15 +127,14 @@ void PlannerNode::pushPathViz()
 
     for (int p = 0; p < X.size(); p++)
     {
-	geometry_msgs::PoseStamped item; 
-	item.header.frame_id = "map";
-	item.header.seq = p;
-	item.header.stamp = now;
-	item.pose.position.x = X[p];
-	item.pose.position.y = Y[p];
-	item.pose.position.z = 0.0;
+        geometry_msgs::PoseStamped item; 
+        item.header.frame_id = "map";
+        item.header.seq = p;
+        item.pose.position.x = X[p];
+        item.pose.position.y = Y[p];
+        item.pose.position.z = 0.0;
 
-	poses.push_back(item);
+        poses.emplace_back(item);
     }
 
     path_viz_msg.poses = poses;
@@ -129,7 +146,6 @@ void PlannerNode::pushPath()
    // publish mur_common::cone_msg
     mur_common::path_msg msg;
     msg.header.frame_id = "map";
-    msg.header.stamp = now;
 
     msg.x = X;
     msg.y = Y;

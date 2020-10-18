@@ -9,15 +9,21 @@
 #include <geometry_msgs/Point.h>
 #include "mur_common/cone_msg.h"
 #include "mur_common/path_msg.h"
+#include "mur_common/diagnostic_msg.h"
 #include "cone.h"
 #include <string>
 #include <vector>
 #include <memory>
+#include <chrono>
 
 #define ODOM_TOPIC "/mur/slam/Odom"
 #define CONE_TOPIC "/mur/slam/cones"
 #define PATH_TOPIC "/mur/planner/path"
 #define PATH_VIZ_TOPIC "/mur/planner/path_viz"
+#define HEALTH_TOPIC "/mur/planner/topic_health"
+
+typedef std::chrono::high_resolution_clock Clock;
+typedef std::chrono::high_resolution_clock::time_point ClockTP;
 
 class PlannerNode
 {
@@ -26,6 +32,7 @@ public:
     void spinThread();
 
 private:
+
     bool const_velocity;
     float v_max;
     float v_const;
@@ -36,6 +43,7 @@ private:
     void clearTempVectors();
     void pushPathViz();
     void pushPath();
+    void pushHealth(ClockTP&, ClockTP&, ClockTP&, ClockTP&);
     void waitForMsgs();
     void odomCallback(const nav_msgs::Odometry&);
     void coneCallback(const mur_common::cone_msg&);
@@ -43,6 +51,7 @@ private:
     void syncMsgs();
     bool cone_msg_received = false;
     bool odom_msg_received = false;
+    uint64_t compute_time;
 
     std::unique_ptr<PathPlanner> planner;
 
@@ -61,8 +70,13 @@ private:
     
     ros::Publisher pub_path;
     ros::Publisher pub_path_viz;
+    ros::Publisher pub_health;
+
+    std::vector<uint32_t> times;
+    std::vector<uint32_t> rtimes;
 
     ros::Time now;
+
     void printVectors();
 };
 

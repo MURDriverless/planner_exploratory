@@ -182,7 +182,6 @@ float PathPlanner::calcAngle(const PathPoint &A, const PathPoint &B, const PathP
 float PathPlanner::calcRelativeAngle(const PathPoint &p1, const PathPoint &p2)
 {
 	const float angle = atan2(p2.y - p1.y, p2.x - p1.x);
-
 	return angle;
 }
 
@@ -408,8 +407,8 @@ PathPoint PathPlanner::centralizeTimingCones()
 
 int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> &cones)
 {
-	float min_dist = 12;
-	float dist;
+	uint8_t min_dist = OPP_CP_DIST;
+	uint8_t dist;
 	int index = -1;
 	int i = 0;
 

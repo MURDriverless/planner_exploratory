@@ -12,6 +12,7 @@
 extern const uint16_t MIN_ANGLE = 95;
 extern const uint16_t MAX_ANGLE = 275;
 extern const uint8_t CP_DIST = 12;
+extern constexpr uint8_t OPP_CP_DIST = 12;
 
 class PathPlanner 
 {
