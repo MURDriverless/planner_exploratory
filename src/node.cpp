@@ -4,6 +4,7 @@
 #include <vector>
 #include <assert.h>
 #include <limits>
+#include <numeric>
 
 PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : nh(n), const_velocity(const_velocity), v_max(v_max), v_const(v_const), max_f_gain(max_f_gain)
@@ -104,8 +105,12 @@ void PlannerNode::pushHealth(ClockTP& s, ClockTP& e, ClockTP& rs, ClockTP& re)
     mur_common::diagnostic_msg h;
     times.emplace_back(std::chrono::duration_cast<std::chrono::microseconds>(e - s).count());
     rtimes.emplace_back(std::chrono::duration_cast<std::chrono::microseconds>(re - rs).count());
+    float mean = std::accumulate(times.begin(), times.end(), 0.0) / times.size();
+    float rmean = std::accumulate(rtimes.begin(), rtimes.end(), 0.0) / rtimes.size();
     h.compute_times = times;
-    h.ros_compute_times = rtimes;
+    h.full_compute_times = rtimes;
+    h.avg_times = mean;
+    h.full_avg_times = rmean;
     pub_health.publish(h);
 }
 
