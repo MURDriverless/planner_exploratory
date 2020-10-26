@@ -65,6 +65,8 @@ int PlannerNode::launchPublishers()
         pub_path = nh.advertise<mur_common::path_msg>(PATH_TOPIC, 1);
         pub_path_viz = nh.advertise<nav_msgs::Path>(PATH_VIZ_TOPIC, 1);
         pub_health = nh.advertise<mur_common::diagnostic_msg>(HEALTH_TOPIC, 1);
+        pub_lcones = nh.advertise<mur_common::cone_msg>(SORTED_CONES_LEFT_TOPIC, 1);
+        pub_rcones = nh.advertise<mur_common::cone_msg>(SORTED_CONES_RIGHT_TOPIC, 1);
     }
     catch (const char *msg)
     {
@@ -90,10 +92,14 @@ void PlannerNode::spinThread()
     clearTempVectors();
     waitForMsgs();
     auto start = Clock::now();
-    planner->update(cones, car_x, car_y, X, Y, V);
+    planner->update(cones, car_x, car_y, 
+                    X, Y, V, 
+                    cone_lx, cone_ly, cone_lcolour, 
+                    cone_rx, cone_ry, cone_rcolour);
     auto end = Clock::now();
     pushPath();
     pushPathViz();
+    pushSortedCones();
     cone_msg_received = false;
     odom_msg_received = false;
     auto rend = Clock::now();
@@ -107,11 +113,27 @@ void PlannerNode::pushHealth(ClockTP& s, ClockTP& e, ClockTP& rs, ClockTP& re)
     rtimes.emplace_back(std::chrono::duration_cast<std::chrono::microseconds>(re - rs).count());
     float mean = std::accumulate(times.begin(), times.end(), 0.0) / times.size();
     float rmean = std::accumulate(rtimes.begin(), rtimes.end(), 0.0) / rtimes.size();
+    h.compute_time = std::chrono::duration_cast<std::chrono::microseconds>(e - s).count();
     h.compute_times = times;
     h.full_compute_times = rtimes;
     h.avg_times = mean;
     h.full_avg_times = rmean;
     pub_health.publish(h);
+}
+
+void PlannerNode::pushSortedCones() const
+{
+    mur_common::cone_msg cl;
+    mur_common::cone_msg cr;
+
+    cl.x.assign(cone_lx.begin(), cone_lx.end() - 1);
+    cl.y.assign(cone_ly.begin(), cone_ly.end() - 1);
+
+    cr.x.assign(cone_rx.begin(), cone_rx.end() - 1);
+    cr.y.assign(cone_ry.begin(), cone_ry.end() - 1);
+
+    pub_lcones.publish(cl);
+    pub_rcones.publish(cr);
 }
 
 void PlannerNode::clearTempVectors()
@@ -120,6 +142,12 @@ void PlannerNode::clearTempVectors()
     Y.clear();
     V.clear();
     cones.clear();
+    cone_lx.clear();
+    cone_ly.clear();
+    cone_lcolour.clear();
+    cone_rx.clear();
+    cone_ry.clear();
+    cone_rcolour.clear();
 }
 
 void PlannerNode::pushPathViz()

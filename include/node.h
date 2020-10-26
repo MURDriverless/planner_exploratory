@@ -21,6 +21,8 @@
 #define PATH_TOPIC "/mur/planner/path"
 #define PATH_VIZ_TOPIC "/mur/planner/path_viz"
 #define HEALTH_TOPIC "/mur/planner/topic_health"
+#define SORTED_CONES_LEFT_TOPIC "/mur/planner/left_sorted_cones"
+#define SORTED_CONES_RIGHT_TOPIC "/mur/planner/right_sorted_cones"
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::high_resolution_clock::time_point ClockTP;
@@ -32,7 +34,6 @@ public:
     void spinThread();
 
 private:
-
     bool const_velocity;
     float v_max;
     float v_const;
@@ -44,6 +45,7 @@ private:
     void pushPathViz();
     void pushPath();
     void pushHealth(ClockTP&, ClockTP&, ClockTP&, ClockTP&);
+    void pushSortedCones() const;
     void waitForMsgs();
     void odomCallback(const nav_msgs::Odometry&);
     void coneCallback(const mur_common::cone_msg&);
@@ -58,6 +60,12 @@ private:
     std::vector<float> X;
     std::vector<float> Y;
     std::vector<float> V;
+    std::vector<float> cone_lx;
+    std::vector<float> cone_ly;
+    std::vector<char> cone_lcolour;
+    std::vector<float> cone_rx;
+    std::vector<float> cone_ry;
+    std::vector<char> cone_rcolour;
     
     std::vector<Cone> cones;
     float car_x;
@@ -71,6 +79,8 @@ private:
     ros::Publisher pub_path;
     ros::Publisher pub_path_viz;
     ros::Publisher pub_health;
+    ros::Publisher pub_lcones;
+    ros::Publisher pub_rcones;
 
     std::vector<uint32_t> times;
     std::vector<uint32_t> rtimes;

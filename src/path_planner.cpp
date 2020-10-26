@@ -6,6 +6,7 @@
 #include <math.h>
 #include <utility>
 #include <string>
+#include "spline.h"
 
 PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cones, bool const_velocity, float v_max, float v_const, float max_f_gain)
     : const_velocity(const_velocity), v_max(v_max), v_const(v_const), f_gain(max_f_gain)
@@ -13,14 +14,18 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 	raw_cones.reserve(1000);
 	l_cones_to_add.reserve(1000);
 	r_cones_to_add.reserve(1000);
+	left_cones.reserve(1000);
+	right_cones.reserve(1000);
+	Xl.reserve(1000);
+	Yl.reserve(1000);
+	Vl.reserve(1000);
 
     // Add to list of raw_cones so that references can be made to be amended
     // Need to change to take in points not cones, these cones will then be converted to cones 
 	addCones(cones);
     
     // Add the car position to the centre points 
-    PathPoint car_pos(car_x, car_y);
-    centre_points.push_back(car_pos);
+    centre_points.emplace_back(car_x, car_y);
 	centre_points.push_back(centralizeTimingCones());
 
     // Sort by distance to car 
@@ -43,13 +48,14 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 }
 
 void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, const float car_y,
-						 std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
+						 std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V,
+						 std::vector<float> &c_lx, std::vector<float> &c_ly, std::vector<char> &c_lcol,
+						 std::vector<float> &c_rx, std::vector<float> &c_ry, std::vector<char> &c_rcol)
 {
 	if (complete)
-		returnResult(X, Y, V);
+		returnResult(X, Y, V, c_lx, c_ly, c_lcol, c_rx, c_ry, c_rcol);
 	else
 	{
-
 		if (left_start_zone)
 		{
 			// join track if feasible
@@ -65,7 +71,6 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 			if (calcDist(centre_points.front(), PathPoint(car_x, car_y)) > 5)
 				left_start_zone = true;
 		}
-		
 
 		if (!reached_end_zone)
 		{
@@ -76,7 +81,50 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 			addVelocityPoints();
 		}
 
-		returnResult(X, Y, V);
+		returnResult(X, Y, V, c_lx, c_ly, c_lcol, c_rx, c_ry, c_rcol);
+		generateSplines();
+	}
+}
+
+void PathPlanner::generateSplines()
+{
+	double new_points = centre_points.size() - Xl.size();
+	size_t num_prev = Xl.size();
+
+	if (new_points > 0)
+	{
+		for (int i = Xl.size(); i < centre_points.size(); i++)
+		{
+			Xl.push_back(centre_points[i].x);
+			Yl.push_back(centre_points[i].y);
+			Vl.push_back(centre_points[i].velocity); 
+		} 
+
+		// Generate vectors for spline input
+		std::vector<double> xd(Xl.begin() + num_prev - 2, Xl.end());
+		std::vector<double> yd(Yl.begin() + num_prev - 2, Yl.end());
+		std::vector<double> vd(Vl.begin() + num_prev - 2, Vl.end());
+		std::vector<double> T(xd.size(), 0);
+
+		for (int i = 0; i < T.size(); i++)
+			T[i] = i;
+
+		// Generate Spline Objects
+		tk::spline sx, sy, sv;
+		sx.set_points(T, xd);
+		sy.set_points(T, yd);
+		sv.set_points(T, vd);
+
+		// Generate Splines
+		const double interval = 100.0d;
+		const double step = 1 / interval;
+		
+		for (double i = 2.0d; i <= T.size(); i += step)
+		{
+			sx(i);
+			sy(i);
+			sv(i);
+		}
 	}
 }
 
@@ -94,13 +142,37 @@ bool PathPlanner::joinFeasible(const float &car_x, const float &car_y)
 		return false;
 }
 
-void PathPlanner::returnResult(std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
+void PathPlanner::returnResult(std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V, 
+							   std::vector<float> &c_lx, std::vector<float> &c_ly, std::vector<char> &c_lcol,
+							   std::vector<float> &c_rx, std::vector<float> &c_ry, std::vector<char> &c_rcol) const
 {
-    for (auto &e: centre_points)
+	for (auto &cp: centre_points)
 	{
-		X.push_back(e.x); 
-		Y.push_back(e.y); 
-		V.push_back(e.velocity);
+		X.push_back(cp.x);
+		Y.push_back(cp.y);
+		V.push_back(cp.velocity);
+	}
+
+	c_lx.reserve(left_cones.size());
+	c_ly.reserve(left_cones.size());
+	c_lcol.reserve(left_cones.size());
+
+	for (auto &cone: left_cones)
+	{
+		c_lx.push_back(cone->position.x);
+		c_ly.push_back(cone->position.y);
+		c_lcol.push_back(cone->colour);
+	}
+
+	c_rx.reserve(right_cones.size());
+	c_ry.reserve(right_cones.size());
+	c_rcol.reserve(right_cones.size());
+
+	for (auto &cone: right_cones)
+	{
+		c_rx.push_back(cone->position.x);
+		c_ry.push_back(cone->position.y);
+		c_rcol.push_back(cone->colour);
 	}
 }
 
@@ -423,14 +495,13 @@ int PathPlanner::findOppositeClosest(const Cone &cone, const std::vector<Cone*> 
 	    }
 	    i++;
 	}
+
 	return index;
 }
 
 void PathPlanner::popConesToAdd()
 {
     double dist;
-
-    // NEEDS TO BE DISTANCE TO THE LAST CONE ON UPDATE, NOT DISTANCE TO THE FIRST IN LCONESTOADD
 
     while (!l_cones_to_add.empty())
     {
@@ -514,4 +585,12 @@ bool PathPlanner::compareConeDist(Cone* const &cone_one, Cone* const &cone_two)
     return cone_one->dist < cone_two->dist;
 }
 
-     
+std::vector<double> PathPlanner::range(const size_t &start, const size_t &end)
+{
+	std::vector<double> ret(end - start, 0);
+
+	for (double i = start; i <= end; i++)
+		ret.push_back(i);
+
+	return ret;
+}
