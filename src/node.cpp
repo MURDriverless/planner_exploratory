@@ -83,7 +83,7 @@ void PlannerNode::printVectors()
 {
     for (int i = 0; i < X.size(); i++)
     {
-        std::cout << X[i] << ' ' << Y[i] << ' ' << V[i] << std::endl;
+        ROS_INFO_STREAM(X[i] << ' ' << Y[i] << ' ' << V[i]);
     }
 }
 
@@ -212,7 +212,7 @@ void PlannerNode::coneCallback(const mur_common::cone_msg &msg)
 	}
 	else if (msg.colour[i] == "na")
 	{
-	    std::cout << "'na' cone colour passed, skipping" << std::endl;
+	    ROS_ERROR_STREAM("'na' cone colour passed, skipping");
 	}
 	else if (msg.colour[i] == "BIG" || msg.colour[i] == "ORANGE")
 	{

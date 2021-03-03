@@ -133,7 +133,6 @@ bool PathPlanner::joinFeasible(const float &car_x, const float &car_y)
 	if (calcDist(centre_points.back(), centre_points.front()) < 2)
 	{
 		float angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), centre_points.front());
-		std::cout << angle << std::endl;
 
 		if (angle > MIN_ANGLE && angle < MAX_ANGLE)
 			return true;
@@ -470,7 +469,6 @@ PathPoint PathPlanner::centralizeTimingCones()
 
 	if (pcp_dist < 4)
 	{
-		std::cout << "Average timing cone position calculated" << std::endl;
 		return avg_point;
 	}
 }
