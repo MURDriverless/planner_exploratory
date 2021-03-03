@@ -305,13 +305,11 @@ PathPoint PathPlanner::generateCentrePoint(const Cone* cone_one, const Cone* con
 
 	if (angle > MIN_ANGLE && angle < MAX_ANGLE && dist_back > 0.5 && dist_back < CP_DIST)
 	{
-		std::cout << "Accepted point: " << dist_back << ' ' << angle << std::endl;
-		feasible = true;
+      feasible = true;
 	}
 	else
 	{
-		std::cout << "Rejected point: " << dist_back << ' ' << angle << std::endl;
-		feasible = false;
+      feasible = false;
 	}
 
 	return midpoint;

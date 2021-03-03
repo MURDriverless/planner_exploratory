@@ -18,14 +18,14 @@ PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, fl
 
     try
     {
-	this->planner = std::unique_ptr<PathPlanner>(new PathPlanner(car_x, car_y, cones, const_velocity, v_max, v_const, max_f_gain));
+        this->planner = std::unique_ptr<PathPlanner>(new PathPlanner(car_x, car_y, cones, const_velocity, v_max, v_const, max_f_gain));
     }
     catch (const char *msg)
     {
-	ROS_ERROR_STREAM(msg);	
+        ROS_ERROR_STREAM(msg);	
     }
 
-    ROS_INFO_STREAM("Planner: Planner initialized");
+    ROS_INFO_STREAM("Planner initialized");
 
     now = ros::Time::now();
 
@@ -37,8 +37,8 @@ void PlannerNode::waitForMsgs()
 {
     while (!cone_msg_received || !odom_msg_received && ros::ok()) 
     {
-	ros::spinOnce();
-	ros::Duration(0.005).sleep();
+        ros::spinOnce();
+        ros::Duration(0.005).sleep();
     }
 }
 
@@ -46,15 +46,16 @@ int PlannerNode::launchSubscribers()
 {
     try
     {
-	sub_odom = nh.subscribe(ODOM_TOPIC, 1, &PlannerNode::odomCallback, this);
-	sub_cones = nh.subscribe(CONE_TOPIC, 1, &PlannerNode::coneCallback, this);
+        sub_odom = nh.subscribe(ODOM_TOPIC, 1, &PlannerNode::odomCallback, this);
+        sub_cones = nh.subscribe(CONE_TOPIC, 1, &PlannerNode::coneCallback, this);
     }
     catch (const char *msg)
     {
-	ROS_ERROR_STREAM(msg);
-	return 0;
+        ROS_ERROR_STREAM(msg);
+        return 0;
     }
-    ROS_INFO_STREAM("Planner: Odometry and cone subscribers connect");
+
+    ROS_INFO_STREAM("Odometry and cone subscribers connect");
     return 1;
 }
 
@@ -74,7 +75,7 @@ int PlannerNode::launchPublishers()
         return 0;
     }
 
-    ROS_INFO_STREAM("Planner: Path, visualisation, diagnostic publishers connected");
+    ROS_INFO_STREAM("Path, visualisation, diagnostic publishers connected");
     return 1;
 }
 
@@ -82,7 +83,7 @@ void PlannerNode::printVectors()
 {
     for (int i = 0; i < X.size(); i++)
     {
-	std::cout << X[i] << ' ' << Y[i] << ' ' << V[i] << std::endl;
+        std::cout << X[i] << ' ' << Y[i] << ' ' << V[i] << std::endl;
     }
 }
 
@@ -118,6 +119,9 @@ void PlannerNode::pushHealth(ClockTP& s, ClockTP& e, ClockTP& rs, ClockTP& re)
     h.full_compute_times = rtimes;
     h.avg_times = mean;
     h.full_avg_times = rmean;
+
+    h.header.stamp = ros::Time::now();
+
     pub_health.publish(h);
 }
 
