@@ -25,7 +25,7 @@ PlannerNode::PlannerNode(ros::NodeHandle n, bool const_velocity, float v_max, fl
         ROS_ERROR_STREAM(msg);	
     }
 
-    ROS_INFO_STREAM("Planner initialized");
+    ROS_INFO_STREAM("Planner: Planner initialized");
 
     now = ros::Time::now();
 
@@ -55,7 +55,7 @@ int PlannerNode::launchSubscribers()
         return 0;
     }
 
-    ROS_INFO_STREAM("Odometry and cone subscribers connect");
+    ROS_INFO_STREAM("Planner: Odometry and cone subscribers connect");
     return 1;
 }
 
@@ -75,7 +75,7 @@ int PlannerNode::launchPublishers()
         return 0;
     }
 
-    ROS_INFO_STREAM("Path, visualisation, diagnostic publishers connected");
+    ROS_INFO_STREAM("Planner: Path, visualisation, diagnostic publishers connected");
     return 1;
 }
 

@@ -1,7 +1,6 @@
 #include "path_planner.h"
 #include "path_point.h"
 #include <ros/ros.h>
-#include <iostream>
 #include <algorithm>
 #include <math.h>
 #include <utility>
@@ -58,9 +57,10 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
     {
         if (left_start_zone)
         {
-            // join track if feasible
+            // Lap finished, join to the first point
             if (joinFeasible(car_x, car_y))
             {
+                ROS_INFO_STREAM("Planner: Lap completed, joining with the start");
                 centre_points.push_back(centre_points.front());
                 reached_end_zone = true;
                 complete = true;
@@ -82,7 +82,9 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
         }
 
         returnResult(X, Y, V, c_lx, c_ly, c_lcol, c_rx, c_ry, c_rcol);
-        generateSplines();
+
+        // Splining currently processed in slow lap follower
+        // generateSplines(); 
     }
 }
 
@@ -130,12 +132,18 @@ void PathPlanner::generateSplines()
 
 bool PathPlanner::joinFeasible(const float &car_x, const float &car_y)
 {
-    if (calcDist(centre_points.back(), centre_points.front()) < 2)
+    if (calcDist(centre_points.back(), centre_points.front()) < 3)
     {
         float angle = calcAngle(*(centre_points.end() - 2), centre_points.back(), centre_points.front());
 
-        if (angle > MIN_ANGLE && angle < MAX_ANGLE)
+        if (angle > 80 && angle < 280)
+        {
             return true;
+        }
+        else
+        {
+            ROS_INFO_STREAM("Planner: Final point < 3m but angle infeasible");
+        }
     }
     else
         return false;
