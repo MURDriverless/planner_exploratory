@@ -65,6 +65,7 @@ int PlannerNode::launchPublishers()
         pub_path = nh.advertise<mur_common::path_msg>(PATH_TOPIC, 1);
         pub_path_viz = nh.advertise<nav_msgs::Path>(PATH_VIZ_TOPIC, 1);
         pub_health = nh.advertise<mur_common::diagnostic_msg>(HEALTH_TOPIC, 1);
+        mapPublisher = nh.advertise<mur_common::map_msg>(MAP_TOPIC, 1);
     }
     catch (const char *msg)
     {
@@ -90,7 +91,7 @@ void PlannerNode::spinThread()
     clearTempVectors();
     waitForMsgs();
     auto start = Clock::now();
-    planner->update(cones, car_x, car_y, X, Y, V);
+    planner->update(cones, car_x, car_y, X, Y, V, mapReady, x_o, y_o, x_i, y_i);
     auto end = Clock::now();
     pushPath();
     pushPathViz();
@@ -98,6 +99,10 @@ void PlannerNode::spinThread()
     odom_msg_received = false;
     auto rend = Clock::now();
     pushHealth(start, end, rstart, rend);
+    if (mapReady)
+    {
+        pushMap(); // Make new var in pathplanner, if true, pushMap()
+    }
 }
 
 void PlannerNode::pushHealth(ClockTP& s, ClockTP& e, ClockTP& rs, ClockTP& re)
@@ -190,4 +195,20 @@ void PlannerNode::coneCallback(const mur_common::cone_msg &msg)
     cone_msg_received = true;
 }
 
+void PlannerNode::pushMap()
+{
+     // Initialize msg
+    mur_common::map_msg map_msg;
 
+    // Set msg
+    map_msg.x_o = x_o;
+    map_msg.y_o = y_o;
+    map_msg.x_i = x_i;
+    map_msg.y_i = y_i;
+    map_msg.x = X;
+    map_msg.y = Y;
+    map_msg.mapready = true;
+
+    // Publish msg
+    mapPublisher.publish(map_msg);
+}

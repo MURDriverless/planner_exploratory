@@ -10,6 +10,7 @@
 #include "mur_common/cone_msg.h"
 #include "mur_common/path_msg.h"
 #include "mur_common/diagnostic_msg.h"
+#include "mur_common/map_msg.h" // Msg for /mur/planner/map topic
 #include "cone.h"
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@
 #define PATH_TOPIC "/mur/planner/path"
 #define PATH_VIZ_TOPIC "/mur/planner/path_viz"
 #define HEALTH_TOPIC "/mur/planner/topic_health"
+#define MAP_TOPIC "/mur/planner/map"
 
 typedef std::chrono::high_resolution_clock Clock;
 typedef std::chrono::high_resolution_clock::time_point ClockTP;
@@ -44,6 +46,7 @@ private:
     void pushPathViz();
     void pushPath();
     void pushHealth(ClockTP&, ClockTP&, ClockTP&, ClockTP&);
+    void pushMap();
     void waitForMsgs();
     void odomCallback(const nav_msgs::Odometry&);
     void coneCallback(const mur_common::cone_msg&);
@@ -58,6 +61,11 @@ private:
     std::vector<float> X;
     std::vector<float> Y;
     std::vector<float> V;
+    std::vector<float> x_o;
+    std::vector<float> y_o;
+    std::vector<float> x_i;
+    std::vector<float> y_i;
+    bool mapReady = false;
     
     std::vector<Cone> cones;
     float car_x;
@@ -71,6 +79,7 @@ private:
     ros::Publisher pub_path;
     ros::Publisher pub_path_viz;
     ros::Publisher pub_health;
+    ros::Publisher mapPublisher;
 
     std::vector<uint32_t> times;
     std::vector<uint32_t> rtimes;

@@ -18,7 +18,7 @@ class PathPlanner
 {
 public:
     PathPlanner(float, float, const std::vector<Cone>&, bool, float, float, float);
-    void update(const std::vector<Cone>&, const float, const float, std::vector<float>&, std::vector<float>&, std::vector<float>&);
+    void update(const std::vector<Cone>&, const float, const float, std::vector<float>&, std::vector<float>&, std::vector<float>&, bool&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<float>&);
     void shutdown();
 
 private:
@@ -47,7 +47,7 @@ private:
     float f_gain;
     int findOppositeClosest(const Cone&, const std::vector<Cone*>&);
     void addFirstCentrePoints();
-    void addCentrePoints(const float&, const float&);
+    void addCentrePoints(const float&, const float&, std::vector<float>&, std::vector<float>&, std::vector<float>&, std::vector<float>&);
     void sortConesByDist(const PathPoint&, const PathPoint&);
     static bool compareConeDist(Cone* const&, Cone* const&);
     void popConesToAdd();

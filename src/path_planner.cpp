@@ -43,13 +43,18 @@ PathPlanner::PathPlanner(float car_x, float car_y, const std::vector<Cone> &cone
 }
 
 void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, const float car_y,
-						 std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V)
+						 std::vector<float> &X, std::vector<float> &Y, std::vector<float> &V, bool &mapReady,
+						 std::vector<float> &x_o, std::vector<float> &y_o, std::vector<float> &x_i, std::vector<float> &y_i)
 {
 	if (complete)
+	{
 		returnResult(X, Y, V);
+		// Use left and right cones for now, check line 278~280 and 302~303 or addCentrePoints()
+		mapReady = true;
+		ROS_INFO("Finished Slow Lap!!!");
+	}
 	else
 	{
-
 		if (left_start_zone)
 		{
 			// join track if feasible
@@ -72,7 +77,7 @@ void PathPlanner::update(const std::vector<Cone> &new_cones, const float car_x, 
 			addCones(new_cones);
 			sortConesByDist(left_cones.back()->position, right_cones.back()->position);
 			popConesToAdd();
-			addCentrePoints(car_x, car_y);
+			addCentrePoints(car_x, car_y, x_o, y_o, x_i, y_i);
 			addVelocityPoints();
 		}
 
@@ -245,7 +250,8 @@ PathPoint PathPlanner::generateCentrePoint(const Cone* cone_one, const Cone* con
 	return midpoint;
 }
 
-void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
+void PathPlanner::addCentrePoints(const float &car_x, const float &car_y, 
+								std::vector<float> &x_o, std::vector<float> &y_o, std::vector<float> &x_i, std::vector<float> &y_i)
 {
 	bool feasible;
 	PathPoint cp;
@@ -269,6 +275,9 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 					{
 						centre_points.push_back(cp);	
 						left_cones[i]->mapped = true;
+						// use left as inner for now
+						x_o.push_back(left_cones[i]->position.x);
+						y_o.push_back(left_cones[i]->position.y);
 					}
 				}
 			}
@@ -290,6 +299,8 @@ void PathPlanner::addCentrePoints(const float &car_x, const float &car_y)
 					{
 						centre_points.push_back(cp);
 						right_cones[i]->mapped = true;
+						x_i.push_back(right_cones[i]->position.x);
+						y_i.push_back(right_cones[i]->position.y);
 					}
 				}
 			}
